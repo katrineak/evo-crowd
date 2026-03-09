@@ -2,7 +2,7 @@ name: Poll EVO & update graf
 
 on:
   schedule:
-    - cron: '*/5 5-23 * * *'  # Every 5 min, 05:00-23:55 (UTC, gym hours ~06:00-00:00 CET)
+    - cron: '*/5 3-23 * * *'  # Every 5 min, covers 05:00-23:59 Norwegian time (both CET and CEST)
   workflow_dispatch:  # Manual trigger
 
 permissions:
@@ -11,6 +11,8 @@ permissions:
 jobs:
   poll-and-update:
     runs-on: ubuntu-latest
+    env:
+      TZ: Europe/Oslo
     steps:
       - uses: actions/checkout@v4
 
@@ -25,7 +27,7 @@ jobs:
           CURRENT=$(echo "$RESPONSE" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d['current'])")
           MAX_CAP=$(echo "$RESPONSE" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d['max_capacity'])")
           PCT=$(echo "$RESPONSE" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d['percentageUsed'])")
-          TIMESTAMP=$(date -u '+%Y-%m-%d %H:%M:%S')
+          TIMESTAMP=$(date '+%Y-%m-%d %H:%M:%S')
 
           if [ ! -f visitor_log.csv ]; then
             echo "timestamp,current,max_capacity,percentageUsed" > visitor_log.csv
@@ -40,7 +42,7 @@ jobs:
           CURRENT=$(echo "$RESPONSE" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d['current'])")
           MAX_CAP=$(echo "$RESPONSE" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d['max_capacity'])")
           PCT=$(echo "$RESPONSE" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d['percentageUsed'])")
-          TIMESTAMP=$(date -u '+%Y-%m-%d %H:%M:%S')
+          TIMESTAMP=$(date '+%Y-%m-%d %H:%M:%S')
 
           if [ ! -f visitor_log_teisen.csv ]; then
             echo "timestamp,current,max_capacity,percentageUsed" > visitor_log_teisen.csv
@@ -86,5 +88,5 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add visitor_log.csv visitor_log_teisen.csv graf.html
           git diff --cached --quiet && echo "No changes" && exit 0
-          git commit -m "Update visitor data $(date -u '+%Y-%m-%d %H:%M') UTC"
+          git commit -m "Oppdatert besøkstall $(date '+%Y-%m-%d %H:%M')"
           git push
